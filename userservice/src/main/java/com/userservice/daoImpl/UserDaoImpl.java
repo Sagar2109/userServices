@@ -16,6 +16,7 @@ import com.userservice.dao.UserDao;
 import com.userservice.model.User;
 import com.userservice.repository.UserRepository;
 import com.userservice.request.ListPageRequest;
+import com.userservice.request.UserListRequest;
 
 @Component
 public class UserDaoImpl implements UserDao {
@@ -29,7 +30,7 @@ public class UserDaoImpl implements UserDao {
 	public User findUserById(String id) {
 
 		return userRepo.findUserById(new ObjectId(id));
-     
+
 	}
 
 	@Override
@@ -62,14 +63,22 @@ public class UserDaoImpl implements UserDao {
 
 	@Override
 	public User updateUser(User user) {
-		
+
 		Query query = Query.query(Criteria.where("id").is(user.getId()));
 		Update update = new Update().set("name", user.getName()).set("contactNo", user.getContactNo()).set("modifiedAt",
 				new Date());
-		//if(user.getName()!=null)
-		//update.set("name",user.getName());	
+		// if(user.getName()!=null)
+		// update.set("name",user.getName());
 		return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
 
 	}
 
+	@Override
+	public List<User> findAllUsersByIds(UserListRequest request) {
+		Query query = Query.query(Criteria.where("id").in((Object[]) request.getId()));
+
+		List<User> ss = mongoTemplate.find(query, User.class, "UserInfo");
+
+		return ss;
+	}
 }

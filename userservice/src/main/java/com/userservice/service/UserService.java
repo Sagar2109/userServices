@@ -6,6 +6,7 @@ import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
+import com.userservice.request.UserListRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.UserCoursesResponse;
 
@@ -22,5 +23,9 @@ public interface UserService {
 	UserDTO addUser(UserDTO userDTO);
 
 	public UserCoursesResponse findAllCoursesByUserService(String userid);
+
+	public List<User> findUsersByIds(UserListRequest request);
+
+	public List<UserCoursesResponse> findUsersByIdsWithCoursePage(UserListRequest request);
 
 }

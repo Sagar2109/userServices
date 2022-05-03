@@ -21,7 +21,9 @@ import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
+import com.userservice.request.UserListRequest;
 import com.userservice.request.UserUpdateRequest;
+import com.userservice.response.UserCoursesResponse;
 import com.userservice.service.UserService;
 import com.userservice.util.Response;
 import com.userservice.util.Utils;
@@ -172,10 +174,79 @@ public class UserController {
 	}
 
 	@GetMapping(value = "/all-courses-byuser")
-	public Object findAllCoursesByUser(@RequestParam String userid) {
-		System.out.println("Manoj" + userid);
+	public Object findAllCoursesByUser(@Valid @RequestParam String userid) {
+		UserCoursesResponse u1 = null;
+		if (userid == null) {
+			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", "useid is null", null);
+		}
+		try {
 
-		return userService.findAllCoursesByUserService(userid);
+			u1 = userService.findAllCoursesByUserService(userid);
+
+			if (u1 == null)
+
+				throw new IllegalAccessException();
+
+			return Response.data(HttpStatus.OK.value(), "Ok", "User with List of Courses is found", u1);
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api findAllCoursesByUser(...)");
+			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User is not found", null);
+
+		}
+	}
+
+	@PostMapping("/users-by-ids")
+	public Object findUsersByIds(@Valid @RequestBody UserListRequest request, BindingResult bindingResult) {
+
+		List<User> userlist = null;
+
+		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
+			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
+					null);
+		}
+		try {
+
+			userlist = userService.findUsersByIds(request);
+            
+			if (userlist == null)
+
+				throw new IllegalAccessException();
+
+			return Response.data(HttpStatus.OK.value(), "Ok", "User list by ids found", userlist);
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api findUsersByIds(...)");
+			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User list by ids not found", userlist);
+
+		}
+
+	}
+	
+	@PostMapping("/users-with-courses")
+	public Object findAllCourseBycreatedBy(@Valid @RequestBody UserListRequest request, BindingResult bindingResult) {
+
+		List<UserCoursesResponse> userlist = null;
+
+		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
+			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
+					null);
+		}
+		try {
+
+			userlist = userService.findUsersByIdsWithCoursePage(request);
+            
+			if (userlist == null)
+
+				throw new IllegalAccessException();
+
+			return Response.data(HttpStatus.OK.value(), "Ok", "User list by idswith courses found", userlist);
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api findUsersByIds(...)");
+			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User list by ids with courses not found", userlist);
+
+		}
 
 	}
 

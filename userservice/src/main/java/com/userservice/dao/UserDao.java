@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.userservice.model.User;
 import com.userservice.request.ListPageRequest;
+import com.userservice.request.UserListRequest;
 
 public interface UserDao {
 
@@ -15,5 +16,7 @@ public interface UserDao {
 
 	public List<User> findAllUsers(ListPageRequest page);
 
-	public User updateUser(User user); 
+	public User updateUser(User user);
+
+	public List<User> findAllUsersByIds(UserListRequest request); 
 }

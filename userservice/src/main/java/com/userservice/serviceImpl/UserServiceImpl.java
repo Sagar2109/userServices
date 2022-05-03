@@ -21,6 +21,7 @@ import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
+import com.userservice.request.UserListRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.CoursesResponse;
 import com.userservice.response.UserCoursesResponse;
@@ -38,6 +39,9 @@ public class UserServiceImpl implements UserService {
 
 	@Value("${courseService.course.getAll}")
 	private String getCourseURL;
+
+	@Value("${courseService.page}")
+	private String getCoursePageURL;
 
 	@Override
 	public User findUserById(String id) {
@@ -111,7 +115,7 @@ public class UserServiceImpl implements UserService {
 
 		HttpHeaders headers = new HttpHeaders();
 		// Map<String, Object> map = new HashMap<>();
-		getCourseURL += "?uid=" + userid;
+		getCourseURL += "?createdBy=" + userid;
 
 		headers.setAcceptLanguageAsLocales(Arrays.asList(Locale.ENGLISH));
 		HttpEntity<CoursesResponse> httpEntity = new HttpEntity<>(headers);
@@ -129,4 +133,34 @@ public class UserServiceImpl implements UserService {
 		return ucs;
 	}
 
+	@Override
+	public List<User> findUsersByIds(UserListRequest request) {
+		return userDao.findAllUsersByIds(request);
+
+	}
+
+	@Override
+	public List<UserCoursesResponse> findUsersByIdsWithCoursePage(UserListRequest request) {
+		
+		ListPageRequest upr=new ListPageRequest();
+		
+		upr.setPage(1);
+		upr.setSearchText("");
+		upr.setTotalInList(4);
+		
+		List<UserCoursesResponse> ucs = null;
+		HttpHeaders headers = new HttpHeaders();
+		// Map<String, Object> map = new HashMap<>();
+		headers.setAcceptLanguageAsLocales(Arrays.asList(Locale.ENGLISH));
+		HttpEntity<ListPageRequest> httpEntity = new HttpEntity<ListPageRequest>(headers);
+
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<List<CoursesResponse>> surveyResponse = restTemplate.exchange(getCoursePageURL, HttpMethod.GET,
+				httpEntity, new ParameterizedTypeReference<List<CoursesResponse>>() {
+				});
+		List<CoursesResponse> courselist = surveyResponse.getBody();
+		ucs = modelMapper.map(user, UserCoursesResponse.class);
+		ucs.setCourses(courselist);
+		return ucs;
+	}
 }
