@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -13,12 +15,15 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.userservice.dao.UserDao;
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
+import com.userservice.request.EmailDetails;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
@@ -31,8 +36,12 @@ import com.userservice.service.UserService;
 
 public class UserServiceImpl implements UserService {
 
+	private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
 	@Autowired
 	private UserDao userDao;
+	@Autowired
+	private JavaMailSender javaMailSender;
 
 	@Autowired
 	private ModelMapper modelMapper;
@@ -40,8 +49,8 @@ public class UserServiceImpl implements UserService {
 	@Value("${courseService.course.getAll}")
 	private String getCourseURL;
 
-	@Value("${courseService.page}")
-	private String getCoursePageURL;
+	@Value("${spring.mail.username}")
+	private String sender;
 
 	@Override
 	public User findUserById(String id) {
@@ -140,27 +149,25 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public List<UserCoursesResponse> findUsersByIdsWithCoursePage(UserListRequest request) {
-		
-		ListPageRequest upr=new ListPageRequest();
-		
-		upr.setPage(1);
-		upr.setSearchText("");
-		upr.setTotalInList(4);
-		
-		List<UserCoursesResponse> ucs = null;
-		HttpHeaders headers = new HttpHeaders();
-		// Map<String, Object> map = new HashMap<>();
-		headers.setAcceptLanguageAsLocales(Arrays.asList(Locale.ENGLISH));
-		HttpEntity<ListPageRequest> httpEntity = new HttpEntity<ListPageRequest>(headers);
+	public boolean sendSimpleMail(EmailDetails details) {
 
-		RestTemplate restTemplate = new RestTemplate();
-		ResponseEntity<List<CoursesResponse>> surveyResponse = restTemplate.exchange(getCoursePageURL, HttpMethod.GET,
-				httpEntity, new ParameterizedTypeReference<List<CoursesResponse>>() {
-				});
-		List<CoursesResponse> courselist = surveyResponse.getBody();
-		ucs = modelMapper.map(user, UserCoursesResponse.class);
-		ucs.setCourses(courselist);
-		return ucs;
+		try {
+
+			SimpleMailMessage mailMessage = new SimpleMailMessage();
+
+			mailMessage.setFrom(sender);
+			mailMessage.setTo(details.getRecipient());
+			mailMessage.setText(details.getMsgBody());
+			mailMessage.setSubject(details.getSubject());
+
+			javaMailSender.send(mailMessage);
+
+			return true;
+		} catch (Exception e) {
+			log.info("Exception Inside UserServiceImpl in Api sendSimpleMail(...)"+e);
+			return false;
+		}
+
 	}
+
 }

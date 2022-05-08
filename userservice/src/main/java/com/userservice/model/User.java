@@ -12,6 +12,7 @@ public class User {
 	private String id;
 	private String name;
 	private String email;
+	private String password;
 	private String contactNo;
 	private boolean suspended = false;
 	private Date createdAt = new Date();
@@ -85,6 +86,14 @@ public class User {
 
 	public void setModifiedAt(Date modifiedAt) {
 		this.modifiedAt = modifiedAt;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 }

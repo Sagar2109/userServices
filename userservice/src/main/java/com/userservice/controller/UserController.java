@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
+import com.userservice.request.EmailDetails;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
@@ -208,7 +209,7 @@ public class UserController {
 		try {
 
 			userlist = userService.findUsersByIds(request);
-            
+
 			if (userlist == null)
 
 				throw new IllegalAccessException();
@@ -223,31 +224,29 @@ public class UserController {
 
 	}
 	
-	@PostMapping("/users-with-courses")
-	public Object findAllCourseBycreatedBy(@Valid @RequestBody UserListRequest request, BindingResult bindingResult) {
-
-		List<UserCoursesResponse> userlist = null;
-
+	@PostMapping("/send-mail")
+	public Object sendMail(@Valid @RequestBody EmailDetails request, BindingResult bindingResult) {
+		
 		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
 			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
 					null);
 		}
-		try {
-
-			userlist = userService.findUsersByIdsWithCoursePage(request);
-            
-			if (userlist == null)
-
-				throw new IllegalAccessException();
-
-			return Response.data(HttpStatus.OK.value(), "Ok", "User list by idswith courses found", userlist);
-
-		} catch (Exception e) {
-			log.info("Exception Inside UserController in Api findUsersByIds(...)");
-			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User list by ids with courses not found", userlist);
-
+		try
+		{
+		  boolean b1=	userService.sendSimpleMail(request);
+		  if(b1==true)
+		  return "Mail Sent Successfully...";
+		  else
+			  throw new IllegalAccessException();
+		  
+		}catch(Exception e)
+		{
+			log.info("Exception Inside UserController in Api sendMail(...)");
+			return "Error while Sending Mail";
 		}
-
+		
 	}
+	
+	
 
 }
