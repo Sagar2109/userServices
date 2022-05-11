@@ -10,23 +10,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.userservice.dao.UserDao;
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
-import com.userservice.request.EmailDetails;
+import com.userservice.request.ChangePasswordRequest;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
+import com.userservice.request.UserLoginRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.CoursesResponse;
 import com.userservice.response.UserCoursesResponse;
@@ -35,22 +36,20 @@ import com.userservice.service.UserService;
 @Service
 
 public class UserServiceImpl implements UserService {
-
 	private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
-
+	@Autowired
+	@Lazy
+	private PasswordEncoder passwordEncoder;
+    
+    
 	@Autowired
 	private UserDao userDao;
-	@Autowired
-	private JavaMailSender javaMailSender;
 
 	@Autowired
 	private ModelMapper modelMapper;
 
 	@Value("${courseService.course.getAll}")
 	private String getCourseURL;
-
-	@Value("${spring.mail.username}")
-	private String sender;
 
 	@Override
 	public User findUserById(String id) {
@@ -66,9 +65,14 @@ public class UserServiceImpl implements UserService {
 			return null;
 
 		} else {
+
+			String s1 = passwordEncoder.encode(userDTO.getPassword());
+
 			User user = userDTOToUser(userDTO);
+			user.setPassword(s1);
 			userDao.addUser(user);
 			userDTO.setId(user.getId());
+
 		}
 		return userDTO;
 
@@ -149,23 +153,39 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean sendSimpleMail(EmailDetails details) {
+	public User userLoginCheck(UserLoginRequest request) throws IllegalAccessException {
+		User user = userDao.findUserByEmail(request.getEmail());
+		boolean b;
+		if (user != null) {
+			b = passwordEncoder.matches(request.getPassword(), user.getPassword());
+			if (b == true)
+				return user;
+			else
+				return null;
+		} else {
+			log.info("Exception Inside UserServiceImpl in service userLoginCheck(...)");
+			throw new IllegalAccessException();
+		}
+	}
 
-		try {
+	@Override
+	public User changePassword(ChangePasswordRequest request) throws IllegalAccessException {
 
-			SimpleMailMessage mailMessage = new SimpleMailMessage();
+		User user = userDao.findUserByEmail(request.getEmail());
+		boolean b;
+		String newpass = null;
 
-			mailMessage.setFrom(sender);
-			mailMessage.setTo(details.getRecipient());
-			mailMessage.setText(details.getMsgBody());
-			mailMessage.setSubject(details.getSubject());
-
-			javaMailSender.send(mailMessage);
-
-			return true;
-		} catch (Exception e) {
-			log.info("Exception Inside UserServiceImpl in Api sendSimpleMail(...)"+e);
-			return false;
+		if (user != null) {
+			b = passwordEncoder.matches(request.getOldPassword(), user.getPassword());
+			if (b == true) {
+				newpass = passwordEncoder.encode(request.getNewPassword());
+				user.setPassword(newpass);
+				return userDao.updatePassword(user);
+			} else
+				return null;
+		} else {
+			log.info("Exception Inside UserServiceImpl in service changePassword(...)");
+			throw new IllegalAccessException();
 		}
 
 	}

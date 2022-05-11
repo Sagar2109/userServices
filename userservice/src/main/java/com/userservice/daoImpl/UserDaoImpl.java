@@ -81,4 +81,21 @@ public class UserDaoImpl implements UserDao {
 
 		return ss;
 	}
+
+	@Override
+	public User findUserByEmail(String email) {
+		Query query= Query.query(Criteria.where("email").is(email));
+		User user=mongoTemplate.findOne(query, User.class,"UserInfo");
+		return user;
+	}
+	
+	@Override
+	public User updatePassword(User user) {
+
+		Query query = Query.query(Criteria.where("id").is(user.getId()));
+		Update update = new Update().set("password", user.getPassword()).set("modifiedAt",new Date());
+		
+		return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), User.class);
+
+	}
 }

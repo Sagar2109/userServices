@@ -18,5 +18,9 @@ public interface UserDao {
 
 	public User updateUser(User user);
 
-	public List<User> findAllUsersByIds(UserListRequest request); 
+	public List<User> findAllUsersByIds(UserListRequest request);
+
+	public User findUserByEmail(String email);
+
+	User updatePassword(User user); 
 }

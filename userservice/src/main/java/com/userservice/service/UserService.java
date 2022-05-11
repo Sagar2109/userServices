@@ -4,10 +4,11 @@ import java.util.List;
 
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
-import com.userservice.request.EmailDetails;
+import com.userservice.request.ChangePasswordRequest;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
+import com.userservice.request.UserLoginRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.UserCoursesResponse;
 
@@ -27,6 +28,8 @@ public interface UserService {
 
 	public List<User> findUsersByIds(UserListRequest request);
 
-	public boolean sendSimpleMail(EmailDetails details);
+	public User userLoginCheck(UserLoginRequest request) throws IllegalAccessException;
+
+	public User changePassword(ChangePasswordRequest request) throws IllegalAccessException;
 
 }

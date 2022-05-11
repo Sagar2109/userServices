@@ -19,12 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
+import com.userservice.request.ChangePasswordRequest;
 import com.userservice.request.EmailDetails;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
+import com.userservice.request.UserLoginRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.UserCoursesResponse;
+import com.userservice.service.EmailService;
 import com.userservice.service.UserService;
 import com.userservice.util.Response;
 import com.userservice.util.Utils;
@@ -37,6 +40,9 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private EmailService emailService;
 
 	@GetMapping("/")
 	public Object findUserById(@RequestParam String id) {
@@ -223,30 +229,76 @@ public class UserController {
 		}
 
 	}
-	
+
 	@PostMapping("/send-mail")
 	public Object sendMail(@Valid @RequestBody EmailDetails request, BindingResult bindingResult) {
-		
+
 		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
 			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
 					null);
 		}
-		try
-		{
-		  boolean b1=	userService.sendSimpleMail(request);
-		  if(b1==true)
-		  return "Mail Sent Successfully...";
-		  else
-			  throw new IllegalAccessException();
-		  
-		}catch(Exception e)
-		{
-			log.info("Exception Inside UserController in Api sendMail(...)");
+		try {
+			boolean b1 = emailService.sendSimpleMail(request);
+			if (b1 == true)
+				return "Mail Sent Successfully...";
+			else
+				throw new IllegalAccessException();
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api sendMail(...)" + e);
 			return "Error while Sending Mail";
 		}
-		
+
 	}
-	
-	
+
+	@PostMapping("/login")
+	public Object userLogin(@Valid @RequestBody UserLoginRequest request, BindingResult bindingResult) {
+
+		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
+			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
+					null);
+		}
+		try {
+
+			User user = userService.userLoginCheck(request);
+
+			if (user == null)
+				return Response.data(HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Email or Password not Matched",
+						null);
+			else
+				return Response.data(HttpStatus.OK.value(), "Ok", "User logged in Successfully", user);
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api userLogin(...)");
+			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User not found", null);
+
+		}
+
+	}
+
+	@PostMapping("/change-password")
+	public Object changePassword(@Valid @RequestBody ChangePasswordRequest request, BindingResult bindingResult) {
+
+		if (bindingResult.hasErrors() || bindingResult.hasFieldErrors()) {
+			return Response.data(HttpStatus.BAD_REQUEST.value(), "BAD_REQUEST", Utils.getFieldError(bindingResult),
+					null);
+		}
+		try {
+
+			User user = userService.changePassword(request);
+
+			if (user == null)
+				return Response.data(HttpStatus.UNAUTHORIZED.value(), "UNAUTHORIZED", "Email or Password not Matched",
+						null);
+			else
+				return Response.data(HttpStatus.OK.value(), "Ok", "Password Changed Successfully", user);
+
+		} catch (Exception e) {
+			log.info("Exception Inside UserController in Api changePassword(...)");
+			return Response.data(HttpStatus.NOT_FOUND.value(), "NOT_FOUND", "User not found", null);
+
+		}
+
+	}
 
 }
