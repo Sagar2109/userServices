@@ -246,6 +246,7 @@ public class UserController {
 
 		} catch (Exception e) {
 			log.info("Exception Inside UserController in Api sendMail(...)" + e);
+			e.printStackTrace();
 			return "Error while Sending Mail";
 		}
 

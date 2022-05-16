@@ -24,6 +24,7 @@ import com.userservice.dao.UserDao;
 import com.userservice.dto.UserDTO;
 import com.userservice.model.User;
 import com.userservice.request.ChangePasswordRequest;
+import com.userservice.request.EmailDetails;
 import com.userservice.request.ListPageRequest;
 import com.userservice.request.UserDeleteRequest;
 import com.userservice.request.UserListRequest;
@@ -31,6 +32,7 @@ import com.userservice.request.UserLoginRequest;
 import com.userservice.request.UserUpdateRequest;
 import com.userservice.response.CoursesResponse;
 import com.userservice.response.UserCoursesResponse;
+import com.userservice.service.EmailService;
 import com.userservice.service.UserService;
 
 @Service
@@ -40,8 +42,10 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	@Lazy
 	private PasswordEncoder passwordEncoder;
-    
-    
+
+	@Autowired
+	private EmailService emailService;
+
 	@Autowired
 	private UserDao userDao;
 
@@ -71,8 +75,18 @@ public class UserServiceImpl implements UserService {
 			User user = userDTOToUser(userDTO);
 			user.setPassword(s1);
 			userDao.addUser(user);
+			
+			EmailDetails mail = new EmailDetails();
+			mail.settoEmail(user.getEmail());
+			mail.setSubject("Confirmation Mail");
+			mail.setMsgBody("You are Registered Successfully");
+			try {
+				emailService.sendSimpleMail(mail);
+			} catch (Exception e) {
+				log.info("Exception Inside UserServiceImpl in service addUser(...)");
+				e.printStackTrace();
+			}
 			userDTO.setId(user.getId());
-
 		}
 		return userDTO;
 
@@ -87,9 +101,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public User updateUser(UserUpdateRequest userUpdateRequest) {
 
-		User u1 = userDao.updateUser(modelMapper.map(userUpdateRequest, User.class));
+		return userDao.updateUser(modelMapper.map(userUpdateRequest, User.class));
 
-		return u1;
 	}
 
 	@Override

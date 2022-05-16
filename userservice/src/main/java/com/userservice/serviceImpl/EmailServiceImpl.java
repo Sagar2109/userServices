@@ -58,6 +58,7 @@ public class EmailServiceImpl implements EmailService {
 		props.put("mail.smtp.starttls.enable", "true");
 		props.put("mail.smtp.host", "smtp.gmail.com");
 		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
 
 		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
 			protected PasswordAuthentication getPasswordAuthentication() {
@@ -79,7 +80,7 @@ public class EmailServiceImpl implements EmailService {
 
 		Transport.send(msg);
 
-		log.info("Exception Inside EmailServiceImpl in Api sendSimpleMail(...)");
+		log.info("Mail sent successfully in Api sendSimpleMail(...)");
 		return true;
 	}
 
