@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -105,7 +106,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public UserCoursesResponse findAllCoursesByUserService(String userid) {
 
-		UserCoursesResponse ucs;
+		 UserCoursesResponse ucs;
+		// if (userid == null) {
+		// 	throw new ChangeSetPersister.NotFoundException("User ID is required");
+		// }
 
 		User user = findUserById(userid);
 
